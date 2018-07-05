@@ -7,6 +7,8 @@ authors = ["Susumu Yamazaki <zacky1972@gmail.com>"]
 time = "0.1.40"
 ocl = "0.18"
 ocl-extras = "0.1"
+rayon = "1.0"
+scoped-pool = "*"
 
 [profile.release]
 opt-level = 3
