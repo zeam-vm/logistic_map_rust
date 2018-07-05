@@ -18,7 +18,12 @@ fn logisticsmap_loop_calc(num: usize, x: i64, p: i64, mu: i64) -> i64 {
     (0..num).fold(x, |x, _| logisticsmap_calc(x, p, mu))
 }
 
-fn benchmark_cpu() {
+fn benchmark_cpu_single() {
+    let r1 = (0..NUM_VALUES as i64).collect::<Vec<_>>().iter().map(|&x| logisticsmap_loop_calc(LOOP, x, P, MU)).collect::<Vec<i64>>();
+    println!("1: {}, 10000: {}", r1[1], r1[10000]);
+}
+
+fn benchmark_cpu_multi() {
     let r1 = (0..NUM_VALUES as i64).collect::<Vec<_>>().par_iter().map(|&x| logisticsmap_loop_calc(LOOP, x, P, MU)).collect::<Vec<i64>>();
     println!("1: {}, 10000: {}", r1[1], r1[10000]);
 }
@@ -100,13 +105,22 @@ fn main() {
         println!("GPU: {:.6} sec", realsec);
     }
     {
-        let _ = rayon::ThreadPoolBuilder::new().num_threads(32).build_global().unwrap();
         let start_time = time::get_time();
-        benchmark_cpu();
+        benchmark_cpu_single();
         let end_time = time::get_time();
         let diffsec = end_time.sec - start_time.sec;   // i64
         let diffsub = end_time.nsec - start_time.nsec; // i32
         let realsec = diffsec as f64 + diffsub as f64 * 1e-9;
-        println!("CPU: {:.6} sec", realsec);        
+        println!("CPU(1): {:.6} sec", realsec);        
+    }
+    {
+        let _ = rayon::ThreadPoolBuilder::new().num_threads(32).build_global().unwrap();
+        let start_time = time::get_time();
+        benchmark_cpu_multi();
+        let end_time = time::get_time();
+        let diffsec = end_time.sec - start_time.sec;   // i64
+        let diffsub = end_time.nsec - start_time.nsec; // i32
+        let realsec = diffsec as f64 + diffsub as f64 * 1e-9;
+        println!("CPU(m): {:.6} sec", realsec);        
     }
 }
