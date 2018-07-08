@@ -5,6 +5,14 @@ extern crate rayon;
 use ocl::{ProQue, Buffer, MemFlags};
 use rayon::prelude::*;
 
+use std::{f64, mem};
+
+#[cfg(target_arch = "x86_64")]
+use std::arch::x86_64::*;
+
+#[cfg(target_arch = "x86")]
+use std::arch::x86::*;
+
 const LOOP: usize = 10;
 const P: i64 = 6_700_417;
 const MU: i64 = 22;
@@ -27,6 +35,31 @@ fn benchmark_cpu_multi() {
     let r1 = (0..NUM_VALUES as i64).collect::<Vec<_>>().par_iter().map(|&x| logisticsmap_loop_calc(LOOP, x, P, MU)).collect::<Vec<i64>>();
     println!("1: {}, 10000: {}", r1[1], r1[10000]);
 }
+
+fn benchmark_cpu_avx() {
+    if is_x86_feature_detected!("avx") {
+        println!("AVX supported.");
+    } else if is_x86_feature_detected!("sse") {
+        println!("SSE supported.");
+        let mut v = (0..NUM_VALUES as i64).collect::<Vec<_>>();
+        for vi in v.iter_mut() {
+            *vi = MU * *vi * (*vi + 1) % P;
+            *vi = MU * *vi * (*vi + 1) % P;
+            *vi = MU * *vi * (*vi + 1) % P;
+            *vi = MU * *vi * (*vi + 1) % P;
+            *vi = MU * *vi * (*vi + 1) % P;
+            *vi = MU * *vi * (*vi + 1) % P;
+            *vi = MU * *vi * (*vi + 1) % P;
+            *vi = MU * *vi * (*vi + 1) % P;
+            *vi = MU * *vi * (*vi + 1) % P;
+            *vi = MU * *vi * (*vi + 1) % P;
+        } 
+        println!("1: {}, 10000: {}", v[1], v[10000]);
+    } else {
+        println!("not supported.")
+    }
+}
+
 
 fn benchmark_gpu() {
     let r1 = logistic_map_ocl((0..NUM_VALUES as i64).collect::<Vec<_>>(), P, MU);
@@ -122,5 +155,14 @@ fn main() {
         let diffsub = end_time.nsec - start_time.nsec; // i32
         let realsec = diffsec as f64 + diffsub as f64 * 1e-9;
         println!("CPU(m): {:.6} sec", realsec);        
+    }
+    {
+        let start_time = time::get_time();
+        benchmark_cpu_avx();
+        let end_time = time::get_time();
+        let diffsec = end_time.sec - start_time.sec;   // i64
+        let diffsub = end_time.nsec - start_time.nsec; // i32
+        let realsec = diffsec as f64 + diffsub as f64 * 1e-9;
+        println!("CPU(AVX): {:.6} sec", realsec);        
     }
 }
