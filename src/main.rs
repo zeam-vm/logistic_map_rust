@@ -1,14 +1,21 @@
+#[macro_use] extern crate lazy_static;
+
 extern crate time;
 extern crate ocl;
 extern crate rayon;
 
 use ocl::{ProQue, Buffer, MemFlags};
 use rayon::prelude::*;
+use rayon::ThreadPool;
 
 const LOOP: usize = 10;
 const P: i64 = 6_700_417;
 const MU: i64 = 22;
 const NUM_VALUES: usize = 0x2_000_000;
+
+lazy_static! {
+    static ref _THREAD_POOL: ThreadPool = rayon::ThreadPoolBuilder::new().num_threads(32).build().unwrap();
+}
 
 fn logisticsmap_calc(x: i64, p: i64, mu: i64) -> i64 {
     mu * x * (x + 1) % p
@@ -111,16 +118,15 @@ fn main() {
         let diffsec = end_time.sec - start_time.sec;   // i64
         let diffsub = end_time.nsec - start_time.nsec; // i32
         let realsec = diffsec as f64 + diffsub as f64 * 1e-9;
-        println!("CPU(1): {:.6} sec", realsec);        
+        println!("CPU(1): {:.6} sec", realsec);
     }
     {
-        let _ = rayon::ThreadPoolBuilder::new().num_threads(32).build_global().unwrap();
         let start_time = time::get_time();
         benchmark_cpu_multi();
         let end_time = time::get_time();
         let diffsec = end_time.sec - start_time.sec;   // i64
         let diffsub = end_time.nsec - start_time.nsec; // i32
         let realsec = diffsec as f64 + diffsub as f64 * 1e-9;
-        println!("CPU(m): {:.6} sec", realsec);        
+        println!("CPU(m): {:.6} sec", realsec);
     }
 }
