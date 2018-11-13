@@ -1,7 +1,9 @@
 extern crate time;
 extern crate rayon;
 extern crate num_cpus;
+extern crate ocl;
 
+use ocl::{ProQue, Buffer, MemFlags};
 use rayon::prelude::*;
 use rayon::ThreadPool;
 use rayon::ThreadPoolBuildError;
