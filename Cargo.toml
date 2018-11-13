@@ -9,6 +9,8 @@ rayon = "1.0"
 scoped-pool = "*"
 lazy_static = "0.2"
 num_cpus = "1.0"
+ocl = "0.18"
+ocl-extras = "0.1"
 
 [profile.release]
 opt-level = 3
